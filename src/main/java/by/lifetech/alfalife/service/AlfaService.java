@@ -89,17 +89,19 @@ public class AlfaService {
 		headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 		headers.set("Authorization", "Bearer " + accessToken);
 		HttpEntity<Void> requestEntity = new HttpEntity<>(headers);
+		
+		url = url + accNumber + "/statement/";
+		
+		UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(url)
+		        .queryParam("dateFrom", dateFrom)
+		        .queryParam("dateTo", dateTo)
+			.queryParam("pageNo", pageNo)
+			.queryParam("pageRowCount", pageRowCount)
+			.queryParam("transactions", transactions);
 
-		Map<String, String> params = new HashMap<String, String>();
-		params.put("dateFrom", dateFrom);
-		params.put("dateTo", dateTo);
-		params.put("pageNo", pageNo);
-		params.put("pageRowCount", pageRowCount);
-		params.put("transactions", transactions);
-		params.put("cacheKey", "<cacheKey>");
-
-		ResponseEntity<Root> responseEntity = restTemplate.exchange(url + accNumber + "/statement/", HttpMethod.GET,
-				requestEntity, Root.class, params);
+		ResponseEntity<Root> responseEntity = restTemplate.exchange(builder.buildAndExpand().toUri(), HttpMethod.GET,
+			requestEntity, Root.class);
+		
 		Root st = responseEntity.getBody();
 		logger.debug("Response body = [" + responseEntity.getBody() + "]");
 
