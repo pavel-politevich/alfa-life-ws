@@ -34,8 +34,7 @@ public class MainController {
 		this.alfaService = alfaService;
 	}
 	
-	// Every day at 09:00 for yesterday's operations
-	@Scheduled(cron = "0 0 9 * * ?")
+	@Scheduled(cron = "${alfa.cron.expression}")
 	void executeAuto() {
 		SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy");
 		Calendar c = java.util.Calendar.getInstance();
@@ -52,7 +51,7 @@ public class MainController {
 		try {
 			Root rt = alfaService.getStatement(dateFrom,dateTo, alfaService.getToken());
 			fileName = alfaService.StatementToFile(rt);
-			alfaService.uploadToFtp(fileName);
+			//alfaService.uploadToFtp(fileName);
 			return rt;
 		} catch (JsonMappingException e) {
 			logger.error("JSON parse exception while get token");
@@ -67,8 +66,7 @@ public class MainController {
 	}
 	
 	
-	@GetMapping("/token")
-	String test() {
+	String testToken() {
 		try {
 			return alfaService.getToken();
 		} catch (JsonMappingException e) {

@@ -10,9 +10,6 @@ import java.io.OutputStreamWriter;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
 import org.slf4j.Logger;
@@ -28,6 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -72,9 +70,9 @@ public class AlfaService {
 	private String ftpHostName;
 	@Value("${ftp1.folder}")
 	private String ftpPath;
-	@Value("${ftp1.fileneme.prefix}")
+	@Value("${ftp1.filename.prefix}")
 	private String prefixFile;
-	@Value("${ftp1.fileneme.extension}")
+	@Value("${ftp1.filename.extension}")
 	private String extensionFile;
 
 	Logger logger = LoggerFactory.getLogger(AlfaService.class);
@@ -95,12 +93,12 @@ public class AlfaService {
 		UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(url)
 		        .queryParam("dateFrom", dateFrom)
 		        .queryParam("dateTo", dateTo)
-			.queryParam("pageNo", pageNo)
-			.queryParam("pageRowCount", pageRowCount)
-			.queryParam("transactions", transactions);
+				.queryParam("pageNo", pageNo)
+				.queryParam("pageRowCount", pageRowCount)
+				.queryParam("transactions", transactions);
 
 		ResponseEntity<Root> responseEntity = restTemplate.exchange(builder.buildAndExpand().toUri(), HttpMethod.GET,
-			requestEntity, Root.class);
+				requestEntity, Root.class);
 		
 		Root st = responseEntity.getBody();
 		logger.debug("Response body = [" + responseEntity.getBody() + "]");
