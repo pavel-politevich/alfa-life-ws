@@ -88,14 +88,14 @@ public class AlfaService {
 		headers.set("Authorization", "Bearer " + accessToken);
 		HttpEntity<Void> requestEntity = new HttpEntity<>(headers);
 		
-		url = url + accNumber + "/statement/";
-		
-		UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(url)
+		UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(url + accNumber + "/statement/")
 		        .queryParam("dateFrom", dateFrom)
 		        .queryParam("dateTo", dateTo)
 				.queryParam("pageNo", pageNo)
 				.queryParam("pageRowCount", pageRowCount)
 				.queryParam("transactions", transactions);
+		
+		logger.info("URI = [" + builder.buildAndExpand().toUri() + "]");
 
 		ResponseEntity<Root> responseEntity = restTemplate.exchange(builder.buildAndExpand().toUri(), HttpMethod.GET,
 				requestEntity, Root.class);

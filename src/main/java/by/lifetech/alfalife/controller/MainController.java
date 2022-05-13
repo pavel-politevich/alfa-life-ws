@@ -65,8 +65,8 @@ public class MainController {
 		}
 	}
 	
-	
-	String testToken() {
+	@GetMapping("/token")
+	String getToken() {
 		try {
 			return alfaService.getToken();
 		} catch (JsonMappingException e) {
@@ -84,5 +84,10 @@ public class MainController {
 		alfaService.uploadToFtp(fileName);
 		return "Success";
 				
+	}
+	
+	@GetMapping("/test")
+	String getTest() {
+		return "TEST SUCCESS!";
 	}
 }
