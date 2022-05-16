@@ -70,6 +70,8 @@ public class AlfaService {
 	private String ftpHostName;
 	@Value("${ftp1.folder}")
 	private String ftpPath;
+	@Value("${ftp1.tempfolder}")
+	private String tempfolder;
 	@Value("${ftp1.filename.prefix}")
 	private String prefixFile;
 	@Value("${ftp1.filename.extension}")
@@ -95,7 +97,7 @@ public class AlfaService {
 				.queryParam("pageRowCount", pageRowCount)
 				.queryParam("transactions", transactions);
 		
-		logger.info("URI = [" + builder.buildAndExpand().toUri() + "]");
+		logger.debug("URI = [" + builder.buildAndExpand().toUri() + "]");
 
 		ResponseEntity<Root> responseEntity = restTemplate.exchange(builder.buildAndExpand().toUri(), HttpMethod.GET,
 				requestEntity, Root.class);
@@ -133,7 +135,7 @@ public class AlfaService {
 	public String StatementToFile(Root statementRoot) throws IOException {
 
 		String fileName = getFileName();
-		File myFile = new File(fileName);
+		File myFile = new File(tempfolder + fileName);
 		BufferedWriter writer = new BufferedWriter(
 				new OutputStreamWriter(new FileOutputStream(myFile.getAbsolutePath()), "CP866"));
 
@@ -159,7 +161,7 @@ public class AlfaService {
 
 	public void uploadToFtp(String fileName) {
 		FTPClient client = new FTPClient();
-		File initialFile = new File(fileName);
+		File initialFile = new File(tempfolder + fileName);
 
 		try (InputStream is = new FileInputStream(initialFile)) {
 			client.connect(ftpHostName);

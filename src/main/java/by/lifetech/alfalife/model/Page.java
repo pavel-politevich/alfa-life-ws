@@ -2,9 +2,14 @@ package by.lifetech.alfalife.model;
 
 import java.util.Date;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class Page {
+	
+	Logger logger = LoggerFactory.getLogger(Page.class);
 
 	@JsonProperty("number")
 	public String getNumber() {
@@ -151,6 +156,10 @@ public class Page {
 
 	@JsonProperty("purpose")
 	public String getPurpose() {
+		if (this.purpose != null && this.purpose.contains(";")) {
+			this.purpose = this.purpose.replaceAll(";", " ");
+			logger.warn("В описании платежа #" + getDocNum() + " убран символ ';' !");
+		}
 		return this.purpose;
 	}
 
@@ -295,7 +304,7 @@ public class Page {
 	
 	public String toFileFormat() {
 		return docNum + ";" + corrBic + ";" + corrNumber + ";" + corrUnp + ";" + amountEq
-				+ ";" + operDate + ";" + purpose;
+				+ ";" + operDate + ";" + getPurpose();
 	}
 	
 	
