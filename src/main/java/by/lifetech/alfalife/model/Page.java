@@ -158,7 +158,7 @@ public class Page {
 	public String getPurpose() {
 		if (this.purpose != null && this.purpose.contains(";")) {
 			this.purpose = this.purpose.replaceAll(";", " ");
-			logger.warn("В описании платежа #" + getDocNum() + " убран символ ';' !");
+			logger.warn("The symbol ';' was removed in the purpose of payment number #" + getDocNum());
 		}
 		return this.purpose;
 	}

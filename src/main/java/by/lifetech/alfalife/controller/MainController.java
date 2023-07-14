@@ -34,13 +34,22 @@ public class MainController {
 		this.alfaService = alfaService;
 	}
 	
-	@Scheduled(cron = "${alfa.cron.expression}")
-	void executeAuto() {
+	@Scheduled(cron = "${alfa.cron.expressionLast}")
+	void executeAutoForYesterday() {
 		SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy");
 		Calendar c = java.util.Calendar.getInstance();
-		c.add(Calendar.DAY_OF_MONTH, -1);
 		c.setTime(new Date());
-		logger.info("Call executeAuto method at Cron");
+		c.add(Calendar.DAY_OF_MONTH, -1);
+		logger.info("Call executeAutoForYesterday method at Cron");
+		execute(sdf.format(c.getTime()), sdf.format(c.getTime()));
+	}
+
+	@Scheduled(cron = "${alfa.cron.expressionNew}")
+	void executeAutoForWeekdays() {
+		SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy");
+		Calendar c = java.util.Calendar.getInstance();
+		c.setTime(new Date());
+		logger.info("Call executeAutoForWeekdays method at Cron");
 		execute(sdf.format(c.getTime()), sdf.format(c.getTime()));
 	}
 	
@@ -51,7 +60,7 @@ public class MainController {
 		try {
 			Root rt = alfaService.getStatement(dateFrom,dateTo, alfaService.getToken());
 			fileName = alfaService.StatementToFile(rt);
-			//alfaService.uploadToFtp(fileName);
+			alfaService.uploadToFtp(fileName);
 			return rt;
 		} catch (JsonMappingException e) {
 			logger.error("JSON parse exception while get token");

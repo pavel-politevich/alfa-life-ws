@@ -8,6 +8,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import org.apache.commons.net.ftp.FTP;
@@ -32,6 +36,8 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import by.lifetech.alfalife.repository.AlfaLifeRequestRepository;
+import by.lifetech.alfalife.dto.AlfapayRequestDto;
 import by.lifetech.alfalife.model.Page;
 import by.lifetech.alfalife.model.Root;
 
@@ -83,6 +89,15 @@ public class AlfaService {
 	HttpHeaders headers = new HttpHeaders();
 	private static ObjectMapper mapper = new ObjectMapper();
 	String token = "";
+
+	private final AlfaLifeRequestRepository alfaLifeRequestRepository;
+	private AlfapayRequestDto alfapayRequestDto;
+
+	public AlfaService(AlfaLifeRequestRepository alfaLifeRequestRepository) {
+		super();
+		this.alfaLifeRequestRepository = alfaLifeRequestRepository;
+
+	}
 
 	public Root getStatement(String dateFrom, String dateTo, String accessToken) {
 
@@ -138,19 +153,52 @@ public class AlfaService {
 		File myFile = new File(tempfolder + fileName);
 		BufferedWriter writer = new BufferedWriter(
 				new OutputStreamWriter(new FileOutputStream(myFile.getAbsolutePath()), "CP866"));
-
+		
+		int postfix = 111;
+		ArrayList<String> statementNumberList = new ArrayList<String>();
+		
 		for (Page p : statementRoot.getPage()) {
-			writer.append(p.toFileFormat());
-			writer.append("\n");
-		}
+			// check for duplicate document number
+			if (statementNumberList.contains(p.getDocNum())) {
+				logger.warn("Document number changed from " + p.getDocNum() + " to " + p.getDocNum() + String.valueOf(postfix));
+				// set new document number
+				p.setDocNum(p.getDocNum() + String.valueOf(postfix));
+				postfix = postfix + 111;
+			}
+			// save to DB
+			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+			LocalDate  dateTime = LocalDate.parse(p.getOperDate(), formatter);
+			
+			alfapayRequestDto = new AlfapayRequestDto();
+			alfapayRequestDto.setInsertDate(LocalDateTime.now());
+			alfapayRequestDto.setDocId(p.getDocId());
+			alfapayRequestDto.setCorrNum(p.getCorrNumber());
+			alfapayRequestDto.setCorrUnp(p.getCorrUnp());
+			alfapayRequestDto.setAmount(p.getAmountEq());
+			alfapayRequestDto.setOperDate(dateTime);
 
+			logger.info(alfapayRequestDto.toString());
+
+			if (alfaLifeRequestRepository.existsByCustomQuery(alfapayRequestDto.getDocId(), alfapayRequestDto.getCorrNum(), alfapayRequestDto.getAmount(), alfapayRequestDto.getOperDate().toString()))
+			{
+				logger.info("Dublicate! Payment with docID=" + p.getDocId() + " and amount= " + p.getAmountEq() + " already exists in DB");
+			}
+			else {
+				alfaLifeRequestRepository.save(alfapayRequestDto);
+				statementNumberList.add(p.getDocNum());
+				writer.append(p.toFileFormat());
+				writer.append("\n");
+			}
+		}
+		
+		logger.debug("statementNumberList = " + statementNumberList.toString());
 		writer.close();
 		return fileName;
 	}
 
 	public String getFileName() {
 		String fileName = prefixFile;
-		SimpleDateFormat sdf = new SimpleDateFormat("ddMM");
+		SimpleDateFormat sdf = new SimpleDateFormat("ddMMHHmm");
 		Calendar c = Calendar.getInstance();
 		Date now = new Date();
 		c.setTime(now);
@@ -163,26 +211,32 @@ public class AlfaService {
 		FTPClient client = new FTPClient();
 		File initialFile = new File(tempfolder + fileName);
 
-		try (InputStream is = new FileInputStream(initialFile)) {
-			client.connect(ftpHostName);
-			boolean login = client.login(ftpUserName, ftpPassword);
-			if (login) {
-				logger.info("Login to FTP success...");
-				client.enterLocalPassiveMode();
-				client.setFileType(FTP.ASCII_FILE_TYPE);
-				client.changeWorkingDirectory(ftpPath);
-				client.storeFile(fileName, is);
-				client.logout();
-				logger.info("File " + fileName + " stored to " + ftpPath);
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
-		} finally {
-			try {
-				client.disconnect();
+		if (initialFile.length() > 0) {
+
+			try (InputStream is = new FileInputStream(initialFile)) {
+				client.connect(ftpHostName);
+				boolean login = client.login(ftpUserName, ftpPassword);
+				if (login) {
+					logger.info("Login to FTP success...");
+					client.enterLocalPassiveMode();
+					client.setFileType(FTP.ASCII_FILE_TYPE);
+					client.changeWorkingDirectory(ftpPath);
+					client.storeFile(fileName, is);
+					client.logout();
+					logger.info("File " + fileName  + " (size: " + initialFile.length() + " bytes) stored to " + ftpPath);
+				}
 			} catch (IOException e) {
 				e.printStackTrace();
+			} finally {
+				try {
+					client.disconnect();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
 			}
+		}
+		else {
+			logger.info("File " + fileName + " has zero size");
 		}
 		initialFile.delete();
 		logger.debug("File " + fileName + " deleted from local folder.");

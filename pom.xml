@@ -9,14 +9,14 @@
 		<version>2.6.4</version>
 		<relativePath /> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>by.lifetech</groupId>
-	<artifactId>alfa-life-ws</artifactId>
-	<version>0.0.1</version>
+	<groupId>by.com.lifetech</groupId>
+	<artifactId>alfapay</artifactId>
+	<version>${version}</version>
 	<packaging>war</packaging>
-	<name>alfa-life-ws</name>
+	<name>alfapay</name>
 	<description>Alfa-Bank vs Best</description>
 	<properties>
-		<java.version>11</java.version>
+		<java.version>1.8</java.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -39,10 +39,25 @@
 			<artifactId>commons-net</artifactId>
 			<version>3.8.0</version>
 		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-jpa</artifactId>
+			<!--scope>provided</scope-->
+		</dependency>
+		<dependency>
+			<groupId>com.oracle.database.jdbc</groupId>
+			<artifactId>ojdbc8</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.oracle.ojdbc</groupId>
+			<artifactId>orai18n</artifactId>
+			<version>19.3.0.0</version>
+		</dependency>
 	</dependencies>
 
 	<build>
-	<finalName>alfa-life-ws</finalName>
+		<finalName>alfa-life-ws</finalName>
 		<plugins>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
@@ -50,5 +65,18 @@
 			</plugin>
 		</plugins>
 	</build>
+	
+	<distributionManagement>
+        <repository>
+            <id>central</id>
+            <name>lifetech-release-repo</name>
+            <url>http://srv-artif-01:8081/artifactory/lifetech-release-repo</url>
+        </repository>
+        <snapshotRepository>
+            <id>snapshots</id>
+            <name>lifetech-snapshots-repo</name>
+            <url>http://srv-artif-01:8081/artifactory/lifetech-release-repo</url>
+        </snapshotRepository>
+    </distributionManagement>
 
 </project>
